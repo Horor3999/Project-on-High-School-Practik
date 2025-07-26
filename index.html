@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Мой Путешественник — Главная</title>
+    <link rel="stylesheet" href="style.css" />
+	<link rel="manifest" href="manifest.json">
+	<meta name="theme-color" content="#2a9d8f">
+
+</head>
+<body>
+<header>
+    <h1>Мой Путешественник</h1>
+    <nav>
+        <a href="index.html" aria-current="page">Главная</a>
+        <a href="about.html">О себе</a>
+        <a href="gallery.html">Галерея</a>
+        <a href="todolist.html">ToDoList</a>
+        <a href="feedback.php">Обратная связь</a>
+    </nav>
+</header>
+<main>
+    <h2>Добро пожаловать в мир путешествий!</h2>
+    <p>Этот сайт посвящен моим приключениям и планам путешествий. Здесь вы найдете фотографии, заметки, а также удобный список задач, чтобы ничего не забыть.</p>
+    <p>Путешествия расширяют горизонты и дарят незабываемые впечатления. Присоединяйтесь к моему путешествию!</p>
+</main>
+<footer>
+    <p>© 2025 Мой Путешественник</p>
+</footer>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/serviceworker.js').then(function(registration) {
+        console.log('ServiceWorker зарегистрирован с областью:', registration.scope);
+      }, function(err) {
+        console.log('Ошибка регистрации ServiceWorker:', err);
+      });
+    });
+  }
+</script>
+
+</body>
+</html>

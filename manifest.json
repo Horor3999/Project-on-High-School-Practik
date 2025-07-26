@@ -1,0 +1,21 @@
+{
+  "name": "My Traveler",
+  "short_name": "Traveler",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2a9d8f",
+  "description": "Личный сайт путешественника",
+  "icons": [
+    {
+      "src": "icons/11.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/22.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

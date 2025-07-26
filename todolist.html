@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>ToDoList — Мой Путешественник</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header>
+    <h1>Мой Путешественник</h1>
+    <nav>
+        <a href="index.html">Главная</a>
+        <a href="about.html">О себе</a>
+        <a href="gallery.html">Галерея</a>
+        <a href="todolist.html" aria-current="page">ToDoList</a>
+        <a href="feedback.php">Обратная связь</a>
+    </nav>
+</header>
+<main>
+    <h2>Список задач для путешествий</h2>
+
+    <form id="taskForm" aria-label="Добавить новую задачу">
+        <input type="text" id="taskText" placeholder="Описание задачи" required aria-required="true" aria-label="Описание задачи" />
+        <input type="date" id="taskDate" required aria-required="true" aria-label="Дата задачи" />
+        <select id="taskPriority" aria-label="Приоритет задачи">
+            <option value="низкий">Низкий приоритет</option>
+            <option value="средний" selected>Средний приоритет</option>
+            <option value="высокий">Высокий приоритет</option>
+        </select>
+        <button type="submit">Добавить</button>
+    </form>
+
+    <div class="filter-delete-container">
+        <label for="filterPriority">Фильтр по приоритету:</label>
+        <select id="filterPriority" aria-label="Фильтр по приоритету">
+            <option value="все" selected>Все</option>
+            <option value="высокий">Высокий</option>
+            <option value="средний">Средний</option>
+            <option value="низкий">Низкий</option>
+        </select>
+        <button id="deleteSelected" aria-label="Удалить выделенные задачи">Удалить выделенные</button>
+    </div>
+
+    <div id="tasksContainer" aria-live="polite" aria-relevant="additions removals"></div>
+</main>
+<footer>
+    <p>© 2025 Мой Путешественник</p>
+</footer>
+
+<script>
+(function(){
+    const taskForm = document.getElementById('taskForm');
+    const taskText = document.getElementById('taskText');
+    const taskDate = document.getElementById('taskDate');
+    const taskPriority = document.getElementById('taskPriority');
+    const tasksContainer = document.getElementById('tasksContainer');
+    const filterPriority = document.getElementById('filterPriority');
+    const deleteSelected = document.getElementById('deleteSelected');
+
+    // Загрузка задач из localStorage
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    // Сохраняем задачи в localStorage
+    function saveTasks() {
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    // Создаем DOM для задачи
+    function createTaskElement(task, index) {
+        const card = document.createElement('div');
+        card.className = 'task-card';
+        if (task.completed) card.querySelector?.classList?.add('completed');
+
+        // Выделение для удаления
+        const selectCheckbox = document.createElement('input');
+        selectCheckbox.type = 'checkbox';
+        selectCheckbox.className = 'task-checkbox';
+        selectCheckbox.setAttribute('aria-label', 'Выделить задачу для удаления');
+
+        // Отметка выполнения
+        const completedCheckbox = document.createElement('input');
+        completedCheckbox.type = 'checkbox';
+        completedCheckbox.checked = task.completed;
+        completedCheckbox.className = 'task-checkbox';
+        completedCheckbox.title = 'Отметить как выполненную';
+
+        completedCheckbox.addEventListener('change', () => {
+            task.completed = completedCheckbox.checked;
+            saveTasks();
+            renderTasks();
+        });
+
+        // Текст задачи
+        const textSpan = document.createElement('span');
+        textSpan.className = 'task-text';
+        textSpan.textContent = task.text;
+        if (task.completed) textSpan.classList.add('completed');
+
+        // Дата и приоритет
+        const detailsSpan = document.createElement('span');
+        detailsSpan.className = 'task-details';
+        detailsSpan.textContent = `Дата: ${task.date} | Приоритет: ${task.priority}`;
+
+        // Кнопки перемещения
+        const controlsDiv = document.createElement('div');
+        controlsDiv.className = 'task-controls';
+
+        const upBtn = document.createElement('button');
+        upBtn.textContent = '↑';
+        upBtn.title = 'Переместить вверх';
+        upBtn.disabled = index === 0;
+
+        const downBtn = document.createElement('button');
+        downBtn.textContent = '↓';
+        downBtn.title = 'Переместить вниз';
+        downBtn.disabled = index === tasks.length - 1;
+
+        upBtn.addEventListener('click', () => {
+            if (index > 0) {
+                [tasks[index], tasks[index - 1]] = [tasks[index - 1], tasks[index]];
+                saveTasks();
+                renderTasks();
+            }
+        });
+
+        downBtn.addEventListener('click', () => {
+            if (index < tasks.length - 1) {
+                [tasks[index], tasks[index + 1]] = [tasks[index + 1], tasks[index]];
+                saveTasks();
+                renderTasks();
+            }
+        });
+
+        controlsDiv.appendChild(upBtn);
+        controlsDiv.appendChild(downBtn);
+
+        // Собираем карточку
+        card.appendChild(selectCheckbox);
+        card.appendChild(completedCheckbox);
+        card.appendChild(textSpan);
+        card.appendChild(detailsSpan);
+        card.appendChild(controlsDiv);
+
+        return { card, selectCheckbox };
+    }
+
+    // Отрисовка задач
+    function renderTasks() {
+        tasksContainer.innerHTML = '';
+
+        // Фильтруем
+        const filtered = tasks.filter(task => filterPriority.value === 'все' || task.priority === filterPriority.value);
+
+        // Сортируем по дате (от старых к новым)
+        filtered.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+        filtered.forEach((task, idx) => {
+            const { card, selectCheckbox } = createTaskElement(task, idx);
+            tasksContainer.appendChild(card);
+        });
+    }
+
+    // Добавление задачи
+    taskForm.addEventListener('submit', e => {
+        e.preventDefault();
+
+        // Проверка даты: не пустая и не в прошлом
+        const today = new Date().toISOString().slice(0,10);
+        if (!taskDate.value) {
+            alert('Пожалуйста, выберите дату задачи.');
+            return;
+        }
+        if (taskDate.value < today) {
+            alert('Дата задачи не может быть в прошлом.');
+            return;
+        }
+
+        const newTask = {
+            text: taskText.value.trim(),
+            date: taskDate.value,
+            priority: taskPriority.value,
+            completed: false
+        };
+
+        if (!newTask.text) {
+            alert('Введите описание задачи.');
+            return;
+        }
+
+        tasks.push(newTask);
+        saveTasks();
+        renderTasks();
+        taskForm.reset();
+    });
+
+    // Фильтр
+    filterPriority.addEventListener('change', renderTasks);
+
+    // Удаление выделенных
+    deleteSelected.addEventListener('click', () => {
+        // Находим чекбоксы выделения
+        const checkboxes = Array.from(tasksContainer.querySelectorAll('.task-card > input[type="checkbox"]:first-child'));
+        // Собираем индексы выделенных задач
+        const toDelete = [];
+        checkboxes.forEach((cb, i) => {
+            if (cb.checked) toDelete.push(i);
+        });
+        if (toDelete.length === 0) {
+            alert('Выберите задачи для удаления.');
+            return;
+        }
+        // Удаляем задачи с конца, чтобы не сбились индексы
+        toDelete.sort((a,b) => b - a).forEach(i => {
+            tasks.splice(i,1);
+        });
+        saveTasks();
+        renderTasks();
+    });
+
+    // Инициализация
+    renderTasks();
+})();
+</script>
+
+</body>
+</html>
